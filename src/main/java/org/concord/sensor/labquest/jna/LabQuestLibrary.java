@@ -239,27 +239,11 @@ public class LabQuestLibrary
     
     static File getNativeLibraryFromJarWindows() throws IOException, InterruptedException {
         String ngioDll = getNativeLibraryResourcePath() + "/NGIO_lib.dll";
-        String copyExec = getNativeLibraryResourcePath() + "/copy_win32_wdapi_dll.exe";
-        String wdapiOS32 = getNativeLibraryResourcePath() + "/wdapi921_WIN32forOS32.dll";
-        String wdapiOS64 = getNativeLibraryResourcePath() + "/wdapi921_WIN32forOS64.dll";
-        String wd64apiOS64 = getNativeLibraryResourcePath() + "/wdapi921_WIN64forOS64.dll";
+        String wdapi = getNativeLibraryResourcePath() + "/wdapi921.dll";
 
         File directory = createTmpDirectory();
-        String arch = System.getProperty("os.arch").toLowerCase();
 
-        if ("amd64".equals(arch)) {
-        	extractResource(wd64apiOS64, directory);
-        } else {
-          // run the copyExec
-          // it seems the executive needs the full path it isn't relative to the working directory.
-        	extractResource(wdapiOS32, directory);
-        	extractResource(wdapiOS64, directory);
-        	File copyExecFile = extractResource(copyExec, directory);
-        	Process exec = Runtime.getRuntime().exec(new String[] {copyExecFile.getCanonicalPath()},
-        			null, copyExecFile.getParentFile());
-       
-        	exec.waitFor();
-        }
+        extractResource(wdapi, directory);
         return extractResource(ngioDll, directory);        
     }
     
@@ -329,9 +313,13 @@ public class LabQuestLibrary
         String osPrefix;
         if (Platform.isWindows()) {
         	if ("amd64".equals(arch))
-        		osPrefix = "win64_x86"; // + arch;
-        	else
-        		osPrefix = "win32_x86"; // + arch;
+        		osPrefix = "win64_java64";
+        	else {
+        		if (System.getenv("ProgramFiles(x86)") == null)
+        		    osPrefix = "win32_java32";
+        		else
+        		    osPrefix = "win64_java32";
+        	}
         }
         else if (Platform.isMac()) {
             osPrefix = "darwin";
